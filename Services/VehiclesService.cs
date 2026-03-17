@@ -1,0 +1,94 @@
+using Microsoft.EntityFrameworkCore;
+using ShopManagement.Data;
+using ShopManagement.DTOs;
+using ShopManagement.Models;
+
+namespace ShopManagement.Services;
+
+public class VehiclesService
+{
+    private readonly AppDbContext _db;
+
+    public VehiclesService(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<List<VehicleDto>> GetVehiclesAsync(string customerPhoneNumber)
+    {
+        return await _db.Vehicles.Where(v => v.CustomerPhoneNumber == customerPhoneNumber)
+        .Select(v => new VehicleDto
+        {
+            VehicleId = v.VehicleId,
+            CustomerPhoneNumber = v.CustomerPhoneNumber,
+            Year = v.Year,
+            Make = v.Make,
+            Model = v.Model,
+            Engine = v.Engine,
+            Vin = v.Vin,
+            Notes = v.Notes
+        }).ToListAsync();
+    }
+
+    public async Task<VehicleDto> AddVehicleAsync(string customerPhoneNumber, AddVehicleDto dto)
+    {
+        // Add vehicle to DB
+        var vehicle = new Vehicle
+        {
+            CustomerPhoneNumber = customerPhoneNumber,
+            Year = dto.Year,
+            Make = dto.Make?.Trim(),
+            Model = dto.Model?.Trim(),
+            Engine = dto.Engine?.Trim(),
+            Vin = dto.Vin?.Trim(),
+            Notes = dto.Notes?.Trim()
+        };
+
+        _db.Vehicles.Add(vehicle);
+
+        await _db.SaveChangesAsync();
+
+        return new VehicleDto
+        {
+            VehicleId = vehicle.VehicleId,
+            CustomerPhoneNumber = vehicle.CustomerPhoneNumber,
+            Year = vehicle.Year,
+            Make = vehicle.Make,
+            Model = vehicle.Model,
+            Engine = vehicle.Engine,
+            Vin = vehicle.Vin,
+            Notes = vehicle.Notes
+        };
+    }
+
+    public async Task<VehicleDto?> UpsertVehicleAsync(int vehicleId, UpsertVehicleDto dto)
+    {
+        var vehicle = await _db.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == vehicleId);
+
+        if (vehicle != null)
+        {
+            vehicle.Year = dto.Year;
+            vehicle.Make = dto.Make;
+            vehicle.Model = dto.Model;
+            vehicle.Engine = dto.Engine;
+            vehicle.Notes = dto.Notes;
+            vehicle.Vin = dto.Vin;
+
+            await _db.SaveChangesAsync();
+            return new VehicleDto
+            {
+                VehicleId = vehicle.VehicleId,
+                Year = vehicle.Year,
+                Make = vehicle.Make,
+                Model = vehicle.Model,
+                Engine = vehicle.Engine,
+                Vin = vehicle.Vin,
+                Notes = vehicle.Notes,
+                CustomerPhoneNumber = vehicle.CustomerPhoneNumber
+            };
+        }
+
+        return null;
+
+    }
+}
