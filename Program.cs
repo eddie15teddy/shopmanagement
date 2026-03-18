@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 
 // Db
 var connectionString = builder.Configuration.GetConnectionString("Default");
-builder.Services.AddDbContext<AppDbContext>(options => 
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).UseSnakeCaseNamingConvention()
 );
 
@@ -25,7 +25,7 @@ builder.Services.AddCors(option =>
 {
     option.AddPolicy("CORS", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localohost:5000")
+        policy.WithOrigins("http://localhost:5173", "http://localohost:5000", "https://shopmanagement-b0gkgbaxckdtbxc9.canadacentral-01.azurewebsites.net")
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
