@@ -120,3 +120,4 @@ src/.vs/config/applicationhost.config
 .DS_store
 .vscode
 node_
+appsettings.json
