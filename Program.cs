@@ -11,7 +11,7 @@ builder.WebHost.UseUrls("http://localhost:5000");
 builder.Services.AddControllers();
 
 // Db
-var connectionString = builder.Configuration.GetConnectionString("Default");
+var connectionString = builder.Configuration.GetConnectionString("Prod");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).UseSnakeCaseNamingConvention()
 );
