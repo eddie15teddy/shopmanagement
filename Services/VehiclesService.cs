@@ -17,6 +17,7 @@ public class VehiclesService
     public async Task<List<VehicleDto>> GetVehiclesAsync(string customerPhoneNumber)
     {
         return await _db.Vehicles.Where(v => v.CustomerPhoneNumber == customerPhoneNumber)
+        .OrderDescending()
         .Select(v => new VehicleDto
         {
             VehicleId = v.VehicleId,
