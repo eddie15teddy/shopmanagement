@@ -42,8 +42,9 @@ public class WorkOrdersService
     // Returns null if vehicle with passed ID does not exist
     public async Task<WorkOrderDto?> CreateWorkOrderAsync(int vehicleId, CreateWorkOrderDto dto)
     {
-        var vehicleExists = await _db.Vehicles.AnyAsync(v => v.VehicleId == vehicleId);
-        if (!vehicleExists)
+
+        var vehicle = await _db.Vehicles.Where(v => v.VehicleId == vehicleId).FirstOrDefaultAsync();
+        if (vehicle == null)
             return null;
 
         var newWorkOrder = new WorkOrder
@@ -54,6 +55,10 @@ public class WorkOrdersService
         };
 
         _db.WorkOrders.Add(newWorkOrder);
+
+        // touch vehicle and customer
+        TouchCustomerAndVehicle(vehicle);
+        
         await _db.SaveChangesAsync();
 
         Console.WriteLine(newWorkOrder.Date);
@@ -194,6 +199,12 @@ public class WorkOrdersService
         }
 
         await _db.WorkOrderLines.AddRangeAsync(lines);
+
+        // Touch customer and vehicle order
+        var vehicle = await _db.Vehicles.FindAsync(workOrder.VehicleId);
+        if (vehicle != null)
+            TouchCustomerAndVehicle(vehicle);
+
         await _db.SaveChangesAsync();
 
         // Get new work order from the database through the api
@@ -206,5 +217,20 @@ public class WorkOrdersService
     {
         decimal taxRate = 0.12m;
         return taxFree ? 0m : taxRate;
+    }
+
+    private async void TouchCustomerAndVehicle(Vehicle vehicle)
+    {
+        var now = DateTime.UtcNow;
+
+        vehicle.LastEdit = now;
+
+        var customer = new Customer
+        {
+            PhoneNumber = vehicle.CustomerPhoneNumber,
+            LastEdit = now,
+        };
+        _db.Customers.Attach(customer);
+        _db.Entry(customer).Property(c => c.LastEdit).IsModified = true;
     }
 }

@@ -10,6 +10,7 @@ public class Customer
     public string? LastName { get; set; }
     public string? Address { get; set; }
     public string? Notes { get; set; }
+    public DateTime? LastEdit { get; set; }
 
     public ICollection<Vehicle> Vehicles {get; set;} = [];
 }
