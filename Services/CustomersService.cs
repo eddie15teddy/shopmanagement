@@ -81,7 +81,8 @@ public class CustomersService
                 FirstName = dto.FirstName?.Trim(),
                 LastName = dto.LastName?.Trim(),
                 Address = dto.Address?.Trim(),
-                Notes = dto.Notes?.Trim()
+                LastEdit = DateTime.UtcNow,
+                Notes = dto.Notes?.Trim(),
             };
 
             _db.Customers.Add(customer);
@@ -93,6 +94,7 @@ public class CustomersService
             customer.FirstName = dto.FirstName?.Trim();
             customer.LastName = dto.LastName?.Trim();
             customer.Address = dto.Address?.Trim();
+            customer.LastEdit = DateTime.UtcNow;
             customer.Notes = dto.Notes?.Trim();
         }
 

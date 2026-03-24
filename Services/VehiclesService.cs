@@ -33,6 +33,8 @@ public class VehiclesService
 
     public async Task<VehicleDto> AddVehicleAsync(string customerPhoneNumber, AddVehicleDto dto)
     {
+        var now = DateTime.UtcNow;
+
         // Add vehicle to DB
         var vehicle = new Vehicle
         {
@@ -42,12 +44,19 @@ public class VehiclesService
             Model = dto.Model?.Trim(),
             Engine = dto.Engine?.Trim(),
             Vin = dto.Vin?.Trim(),
-            Notes = dto.Notes?.Trim()
+            LastEdit = now,
+            Notes = dto.Notes?.Trim(),
         };
 
         _db.Vehicles.Add(vehicle);
 
+        // touch customer
+        var customer = await _db.Customers.FindAsync(customerPhoneNumber);
+        if (customer != null)
+            customer.LastEdit = now;
+
         await _db.SaveChangesAsync();
+
 
         return new VehicleDto
         {
@@ -64,6 +73,8 @@ public class VehiclesService
 
     public async Task<VehicleDto?> UpsertVehicleAsync(int vehicleId, UpsertVehicleDto dto)
     {
+        var now = DateTime.UtcNow;
+
         var vehicle = await _db.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == vehicleId);
 
         if (vehicle != null)
@@ -74,6 +85,12 @@ public class VehiclesService
             vehicle.Engine = dto.Engine;
             vehicle.Notes = dto.Notes;
             vehicle.Vin = dto.Vin;
+            vehicle.LastEdit = now;
+
+            // touch customer
+            var customer = await _db.Customers.FindAsync(vehicle.CustomerPhoneNumber);
+            if (customer != null)
+                customer.LastEdit = now;
 
             await _db.SaveChangesAsync();
             return new VehicleDto
