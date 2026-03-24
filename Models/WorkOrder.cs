@@ -11,4 +11,6 @@ public class WorkOrder
     public decimal TaxRate { get; set; }
     public string Notes { get; set; } = "";
 
+    public ICollection<WorkOrderLine> WorkOrderLines { get; set; } = [];
+    public Vehicle? Vehicle { get; set; }
 }

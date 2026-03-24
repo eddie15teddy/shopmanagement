@@ -9,4 +9,6 @@ public class WorkOrderLine
     public string Type { get; set; } = "";
     public string Name { get; set; } = "";
     public decimal Cost { get; set; }
+
+    public WorkOrder? WorkOrder { get; set; }
 }

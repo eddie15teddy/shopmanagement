@@ -13,4 +13,7 @@ public class Vehicle
     public string? Engine { get; set; }
     public string? Vin { get; set; }
     public string? Notes { get; set; }
+
+    public ICollection<WorkOrder> WorkOrders { get; set; } = [];
+    public Customer? Customer { get; set; }
 }
