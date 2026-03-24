@@ -51,7 +51,7 @@ public class WorkOrdersService
         {
             VehicleId = vehicleId,
             Date = dto.Date,
-            TaxRate = GetTaxRate(false), // A work order is not tax free by default
+            TaxRate = 0, // A work order is not tax free by default
         };
 
         _db.WorkOrders.Add(newWorkOrder);
@@ -60,8 +60,6 @@ public class WorkOrdersService
         TouchCustomerAndVehicle(vehicle);
         
         await _db.SaveChangesAsync();
-
-        Console.WriteLine(newWorkOrder.Date);
         
         return new WorkOrderDto
         {

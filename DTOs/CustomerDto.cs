@@ -7,6 +7,6 @@ public class CustomerDto
     public string? LastName { get; set; }
     public string? Address { get; set; }
     public string? Notes { get; set; }
-
     public List<VehicleDto> Vehicles { get; set; } = [];
+    public decimal? TotalOwing { get; set; }
 }
