@@ -1,7 +1,6 @@
 namespace ShopManagement.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders.Physical;
 using ShopManagement.DTOs;
 using ShopManagement.Services;
 
@@ -28,6 +27,13 @@ public class CustomersController : ControllerBase
 
         customer.Vehicles = await _vehiclesService.GetVehiclesAsync(customer.PhoneNumber);
         return Ok(customer);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var customers = await _customersService.GetAllCustomersAsync();
+        return Ok(customers);
     }
 
     [HttpPut("{phoneNumber}")]

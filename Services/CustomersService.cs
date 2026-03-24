@@ -28,6 +28,44 @@ public class CustomersService
         .FirstOrDefaultAsync();
     }
 
+    // Gets all customers, calculating the balance for each one, and the vehicles for each customer
+    public async Task<List<CustomerDto>> GetAllCustomersAsync()
+    {
+        return await _db.Customers
+        .OrderByDescending(c => c.LastEdit)
+            .Select(c => new CustomerDto
+            {
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                PhoneNumber = c.PhoneNumber,
+                Notes = c.Notes,
+                Address = c.Address,
+                TotalOwing = c.Vehicles
+                    .SelectMany(v => v.WorkOrders)
+                    .SelectMany(wo => wo.WorkOrderLines.Select(line => new { line, wo.TaxRate }))
+                    .Sum(x =>
+                        x.line.Type == "payment"
+                            ? -x.line.Cost
+                            : (x.line.Type == "labour" || x.line.Type == "part")
+                                ? x.line.Cost * (1 + x.TaxRate)
+                                : 0),
+                Vehicles = c.Vehicles
+                    .OrderByDescending(v => v.LastEdit)
+                    .Select(v => new VehicleDto
+                    {
+                        VehicleId = v.VehicleId,
+                        Make = v.Make,
+                        Model = v.Model,
+                        Year = v.Year,
+                        Vin = v.Vin,
+                        Engine = v.Engine,
+                        Notes = v.Notes
+                    })
+                    .ToList()
+            })
+    .ToListAsync();
+    }
+
     public async Task<(CustomerDto, bool)> UpsertCustomerAsync(string phoneNumber, UpsertCustomersDto dto)
     {
         bool created = false;
