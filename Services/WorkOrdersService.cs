@@ -108,7 +108,7 @@ public class WorkOrdersService
         var partsTotal = parts.Sum(item => item.Cost);
         var paymentsTotal = payments.Sum(item => item.Cost);
         var subTotal = labourTotal + partsTotal;
-        var tax = subTotal * workOrder.TaxRate;
+        var tax = Math.Round(subTotal * workOrder.TaxRate, 2);
         var taxFree = workOrder.TaxRate == 0m;
         var grandTotal = subTotal + tax;
         var amountDue = grandTotal - paymentsTotal;

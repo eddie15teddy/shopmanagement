@@ -47,7 +47,7 @@ public class CustomersService
                         x.line.Type == "payment"
                             ? -x.line.Cost
                             : (x.line.Type == "labour" || x.line.Type == "part")
-                                ? x.line.Cost * (1 + x.TaxRate)
+                                ? Math.Round(x.line.Cost * (1 + x.TaxRate), 2)
                                 : 0),
                 Vehicles = c.Vehicles
                     .OrderByDescending(v => v.LastEdit)
