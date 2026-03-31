@@ -25,7 +25,7 @@ builder.Services.AddCors(option =>
 {
     option.AddPolicy("CORS", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localohost:5000", "https://shopmanagement-b0gkgbaxckdtbxc9.canadacentral-01.azurewebsites.net")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5000", "https://shopmanagement-b0gkgbaxckdtbxc9.canadacentral-01.azurewebsites.net")
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
