@@ -114,8 +114,22 @@ public class InvoiceDocument : IDocument
 
             col.Item().Text($"{customer?.FirstName} {customer?.LastName}");
             col.Item().Text(customer?.Address);
-            col.Item().Text(customer?.PhoneNumber);
+            col.Item().Text(FormatPhoneNumber(customer?.PhoneNumber));
         });
+    }
+
+    private static string FormatPhoneNumber(string? phoneNumber)
+    {
+
+        if(phoneNumber != null && phoneNumber.Length == 10)
+        {
+            string areaCode = "(" + phoneNumber[0..3] + ")";
+            string number = phoneNumber[3..6] + "-" + phoneNumber[6..10];
+
+            return  areaCode + " " + number;
+        }
+
+        return phoneNumber ?? "";
     }
 
     private void ComposeTable(IContainer container, string title, WorkOrderLineDto[] items)
