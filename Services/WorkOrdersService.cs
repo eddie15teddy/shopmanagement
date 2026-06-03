@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using PDF_Reader;
+using QuestPDF.Fluent;
 using ShopManagement.Data;
 using ShopManagement.DTOs;
 using ShopManagement.Models;
@@ -209,6 +211,30 @@ public class WorkOrdersService
         var updatedWorkOrder = await GetWorkOrderAsync(workOrderId);
 
         return updatedWorkOrder;
+    }
+
+    public async Task<byte[]?> GenerateInvoice(int workOrderId)
+    {
+        // Get Work Order
+        var workOrder = await GetWorkOrderAsync(workOrderId);
+        if (workOrder == null)
+            return null;
+
+        // Get Vehicle
+        var vehicle = await _db.Vehicles.Where(item => item.VehicleId == workOrder.VehicleId).FirstOrDefaultAsync() 
+            ?? throw new InvalidOperationException("The database data is inconsistent");
+        
+        // Get Customer
+        var customer = await _db.Customers.Where(item => item.PhoneNumber == vehicle.CustomerPhoneNumber).FirstOrDefaultAsync() 
+            ?? throw new InvalidOperationException("The database data is inconsistent");
+
+        // Put Work Order, Vehicle and Customer together
+        var invoiceDataDto = new InvoiceDataDto(customer, vehicle, workOrder);
+
+        // Get File and bytes
+        var pdfDoc = new InvoiceDocument(invoiceDataDto);
+        var invoiceFile = pdfDoc.GeneratePdf();
+        return invoiceFile;
     }
 
     private static decimal GetTaxRate(bool taxFree)

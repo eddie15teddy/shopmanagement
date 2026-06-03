@@ -57,4 +57,20 @@ public class WorkOrdersController : ControllerBase
         else
             return Ok(result);
     }
+
+    [HttpGet("api/work_orders/{work_order_id}/invoice")]
+    public async Task<IActionResult> GetInvoice(int work_order_id)
+    {
+        try {
+        var invoiceBytes = await _workOrdersService.GenerateInvoice(work_order_id);
+        
+        if(invoiceBytes == null)
+            return NotFound($"Work order with ID {work_order_id} was not found.");
+
+        return File(invoiceBytes, "application/pdf", "invoice.pdf");
+        } catch (InvalidOperationException e)
+        {
+            return StatusCode(500, e.Message);
+        }
+    }
 }
