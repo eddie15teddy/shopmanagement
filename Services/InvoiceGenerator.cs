@@ -43,9 +43,15 @@ public class InvoiceDocument : IDocument
             row.ConstantItem(200).AlignRight().Column(col =>
             {
                 col.Item().Text(_data.Estimate ? "ESTIMATE" : "INVOICE").Bold().FontSize(20);
-                col.Item().Text($"Date: {DateTime.Today:yyyy-MM-dd}");
                 if (_data.Estimate == false)
                     col.Item().Text($"InvoiceNumber: {_data.WorkOrderDto.WorkOrderId}");
+
+                // Get current date in Winnipeg (as opposed to server location)
+                var timeZoneId = OperatingSystem.IsWindows()
+                    ? "Central Standard Time"
+                    : "America/Winnipeg"; 
+                var wpgDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId));
+                col.Item().Text($"Date: {wpgDateTime:yyyy-MM-dd}");
             });
         });
     }
