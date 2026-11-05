@@ -60,9 +60,9 @@ public class WorkOrdersService
 
         // touch vehicle and customer
         TouchCustomerAndVehicle(vehicle);
-        
+
         await _db.SaveChangesAsync();
-        
+
         return new WorkOrderDto
         {
             WorkOrderId = newWorkOrder.WorkOrderId,
@@ -156,61 +156,75 @@ public class WorkOrdersService
         if (workOrder == null)
             return null;
 
-        // Delete all work order lines for this work order
-        await _db.WorkOrderLines.Where(item => item.WorkOrderId == workOrderId).ExecuteDeleteAsync();
-
-        // Update work order and add work order lines
-        workOrder.Date = dto.Date;
-        workOrder.Notes = dto.Notes;
-        workOrder.TaxRate = GetTaxRate(dto.TaxFree);
-
-        var lines = new List<WorkOrderLine>();
-        foreach (var labour in dto.Labour)
+        // Makes the entire transaction atomic, preventing case where old lines are removed,
+        // but new ones fail to be inserted
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+        try
         {
-            lines.Add(new WorkOrderLine
-            {
-                Type = "labour",
-                Name = labour.Name,
-                Cost = labour.Cost,
-                WorkOrderId = workOrderId,
-            });
-        }
+            // Delete all work order lines for this work order
+            await _db.WorkOrderLines.Where(item => item.WorkOrderId == workOrderId).ExecuteDeleteAsync();
 
-        foreach (var part in dto.Parts)
+            // Update work order and add work order lines
+            workOrder.Date = dto.Date;
+            workOrder.Notes = dto.Notes;
+            workOrder.TaxRate = GetTaxRate(dto.TaxFree);
+
+            var lines = new List<WorkOrderLine>();
+            foreach (var labour in dto.Labour)
+            {
+                lines.Add(new WorkOrderLine
+                {
+                    Type = "labour",
+                    Name = labour.Name,
+                    Cost = labour.Cost,
+                    WorkOrderId = workOrderId,
+                });
+            }
+
+            foreach (var part in dto.Parts)
+            {
+                lines.Add(new WorkOrderLine
+                {
+                    Type = "part",
+                    Name = part.Name,
+                    Cost = part.Cost,
+                    WorkOrderId = workOrderId,
+                });
+            }
+
+            foreach (var payment in dto.Payments)
+            {
+                lines.Add(new WorkOrderLine
+                {
+                    Type = "payment",
+                    Name = payment.Name,
+                    Cost = payment.Cost,
+                    WorkOrderId = workOrderId,
+                });
+            }
+
+            await _db.WorkOrderLines.AddRangeAsync(lines);
+
+            // Touch customer and vehicle order
+            var vehicle = await _db.Vehicles.FindAsync(workOrder.VehicleId);
+            if (vehicle != null)
+                TouchCustomerAndVehicle(vehicle);
+
+            await _db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+        }
+        catch
         {
-            lines.Add(new WorkOrderLine
-            {
-                Type = "part",
-                Name = part.Name,
-                Cost = part.Cost,
-                WorkOrderId = workOrderId,
-            });
+            await transaction.RollbackAsync();
+            throw;
         }
-
-        foreach (var payment in dto.Payments)
-        {
-            lines.Add(new WorkOrderLine
-            {
-                Type = "payment",
-                Name = payment.Name,
-                Cost = payment.Cost,
-                WorkOrderId = workOrderId,
-            });
-        }
-
-        await _db.WorkOrderLines.AddRangeAsync(lines);
-
-        // Touch customer and vehicle order
-        var vehicle = await _db.Vehicles.FindAsync(workOrder.VehicleId);
-        if (vehicle != null)
-            TouchCustomerAndVehicle(vehicle);
-
-        await _db.SaveChangesAsync();
 
         // Get new work order from the database through the api
         var updatedWorkOrder = await GetWorkOrderAsync(workOrderId);
 
         return updatedWorkOrder;
+
     }
 
     public async Task<byte[]?> GenerateInvoice(int workOrderId)
@@ -221,11 +235,11 @@ public class WorkOrdersService
             return null;
 
         // Get Vehicle
-        var vehicle = await _db.Vehicles.Where(item => item.VehicleId == workOrder.VehicleId).FirstOrDefaultAsync() 
+        var vehicle = await _db.Vehicles.Where(item => item.VehicleId == workOrder.VehicleId).FirstOrDefaultAsync()
             ?? throw new InvalidOperationException("The database data is inconsistent");
-        
+
         // Get Customer
-        var customer = await _db.Customers.Where(item => item.PhoneNumber == vehicle.CustomerPhoneNumber).FirstOrDefaultAsync() 
+        var customer = await _db.Customers.Where(item => item.PhoneNumber == vehicle.CustomerPhoneNumber).FirstOrDefaultAsync()
             ?? throw new InvalidOperationException("The database data is inconsistent");
 
         // Put Work Order, Vehicle and Customer together
