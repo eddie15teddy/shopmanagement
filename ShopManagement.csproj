@@ -20,4 +20,10 @@
   </Content>
 </ItemGroup>
 
+<PropertyGroup>
+  <DefaultItemExcludes>
+    $(DefaultItemExcludes);frontend/**
+  </DefaultItemExcludes>
+</PropertyGroup>
+
 </Project>
