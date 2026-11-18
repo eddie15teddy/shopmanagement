@@ -96,12 +96,10 @@ export default function LookupSection() {
     unselectCustomer();
   }
 
-  // filters customer by search text
+  // filters customer by search text and open work order status
   function filterCustomer(customer: Customer) {
-    if (
+    const matchSearch =  (
       searchText == "" ||
-      // includesIgnoreCase(customer.firstName, searchText) ||
-      // includesIgnoreCase(customer.lastName, searchText) ||
       includesIgnoreCase(
         customer.firstName + " " + customer.lastName,
         searchText,
@@ -118,10 +116,11 @@ export default function LookupSection() {
           includesIgnoreCase(v.engine, searchText) ||
           includesIgnoreCase(v.vin, searchText) ||
           includesIgnoreCase(v.notes, searchText),
-      )
-    )
-      return true;
-    return false;
+      ));
+
+      const open = customer.totalOwing > 0;
+
+      return tabValue === 0 ? matchSearch : matchSearch && open;
   }
 
   function includesIgnoreCase(source: string | undefined | null, key: string) {
@@ -240,23 +239,7 @@ export default function LookupSection() {
         </Stack>
       )}
 
-      {tabValue == 1 && (
-        <Stack sx={listSx}>
-          {openCustomers.map((customer, index) => (
-            <Box
-              key={customer.phoneNumber}
-              onClick={() => handleCustomerClick(index)}
-            >
-              <CustomerCard
-                customer={customer}
-                selected={index == selectedCustomerIndex}
-              />
-            </Box>
-          ))}
-        </Stack>
-      )}
-
-      {tabValue == 0 && (
+      {(tabValue == 0 || tabValue == 1) && (
         <>
           <Spinner spin={listLoading} />
           {!listLoading && (
